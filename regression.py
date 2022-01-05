@@ -59,42 +59,28 @@ class Regression:
 
         if self.train_test_split:
             self.X_train, self.X_test, self.z_train, self.z_test = self.split_and_scale_data(self.X, self.z, test_size=0.2)
-        
-            if model=='ols':
-                if self.sklearn==False:
-                    self.beta = self.__ols(self.X_train, self.z_train)
-                else:
-                    self.beta = self.__sklearn_ols(self.X_train, self.z_train)
-                self.z_pred_train = self.prediction(self.X_train, self.beta)            
-                self.z_pred_test = self.prediction(self.X_test, self.beta)
-            elif model=='ridge':
-                if self.sklearn==False:
-                    self.beta = self.__ridge(self.X_train, self.z_train)
-                else:
-                    self.beta = self.__sklearn_ridge(self.X_train, self.z_train)
-                self.z_pred_train = self.prediction(self.X_train, self.beta)            
-                self.z_pred_test = self.prediction(self.X_test, self.beta)
-            elif model=='lasso':
-                self.beta =  self.__sklearn_lasso(self.X_train, self.z_train)
-                self.z_pred_train = self.prediction(self.X_train, self.beta)            
-                self.z_pred_test = self.prediction(self.X_test, self.beta)
 
+            self.__apply_model(model, self.X_train, self.z_train)
         else:
-            if model=='ols':
-                if self.sklearn==False:
-                    self.beta = self.__ols(self.X, self.z)
-                else:
-                    self.beta = self.__sklearn_ols(self.X, self.z)
-                self.z_pred = self.prediction(self.X, self.beta)
-            elif model=='ridge':
-                if self.sklearn==False:
-                    self.beta = self.__ridge(self.X, self.z)
-                else:
-                    self.beta = self.__sklearn_ridge(self.X, self.z)
-                self.z_pred = self.prediction(self.X, self.beta)
-            elif model=='lasso':
-                self.beta = self.__sklearn_lasso(self.X, self.z)
-                self.z_pred = self.prediction(self.X, self.beta)
+            self.__apply_model(model, self.X, self.z)
+
+    def __apply_model(self, model, X, z):
+
+        if model=='ols':
+            if self.sklearn==False:
+                    self.beta = self.__ols(X, z)
+            else:
+                self.beta = self.__sklearn_ols(X)
+        elif model=='ridge':
+            if self.sklearn==False:
+                self.beta = self.__ridge(X, z)
+            else:
+                self.beta = self.__sklearn_ridge(X, z)
+        elif model=='lasso':
+            self.beta = self.__sklearn_lasso(X, z)
+
+        self.z_pred = self.prediction(self.X, self.beta)
+
 
     def __ols(self, X, z):
         """Applies the Ordinary Least Squares regression model on data."""
