@@ -60,11 +60,11 @@ class Regression:
         if self.train_test_split:
             self.X_train, self.X_test, self.z_train, self.z_test = self.split_and_scale_data(self.X, self.z, test_size=0.2)
 
-            self.apply_model(model, self.X_train, self.z_train)
+            self.beta = self.apply_model(model, self.X_train, self.z_train)
             self.z_pred_train = self.prediction(self.X_train, self.beta)            
             self.z_pred_test = self.prediction(self.X_test, self.beta)
         else:
-            self.apply_model(model, self.X, self.z)
+            self.beta = self.apply_model(model, self.X, self.z)
             self.z_pred = self.prediction(self.X, self.beta)
 
 
@@ -72,16 +72,18 @@ class Regression:
 
         if model=='ols':
             if self.sklearn==False:
-                    self.beta = self.__ols(X, z)
+                beta = self.__ols(X, z)
             else:
-                self.beta = self.__sklearn_ols(X, z)
+                beta = self.__sklearn_ols(X, z)
         elif model=='ridge':
             if self.sklearn==False:
-                self.beta = self.__ridge(X, z)
+                beta = self.__ridge(X, z)
             else:
                 self.beta = self.__sklearn_ridge(X, z)
         elif model=='lasso':
-            self.beta = self.__sklearn_lasso(X, z)
+            beta = self.__sklearn_lasso(X, z)
+
+        return beta
 
 
     def __ols(self, X, z):
@@ -217,19 +219,7 @@ class Regression:
         for n in range(n_boots):
             _X_train, _z_train = resample(X_train, z_train, replace=True)
 
-            if model=='ols':
-                if self.sklearn==False:
-                    _beta = self.__ols(_X_train, _z_train)
-                else:
-                    _beta = self.__sklearn_ols(_X_train, _z_train)
-            elif model=='ridge':
-                if self.sklearn==False:
-                    _beta = self.__ridge(_X_train, _z_train)
-                else:
-                    _beta = self.__sklearn_ridge(_X_train, _z_train)
-            elif model=='lasso':
-                _beta = self.__sklearn_lasso(_X_train, _z_train)
-
+            _beta = self.apply_model(model, _X_train, _z_train)
             _z_pred_train = self.prediction(_X_train, _beta) 
             _z_pred_test = self.prediction(X_test, _beta)
 
@@ -264,18 +254,7 @@ class Regression:
             _X_train = np.concatenate(X_folds[:i] + X_folds[i+1:])
             _z_train = np.concatenate(z_folds[:i] + z_folds[i+1:])
 
-            if model=='ols':
-                if self.sklearn==False:
-                    _beta = self.__ols(_X_train, _z_train)
-                else:
-                    _beta = self.__sklearn_ols(_X_train, _z_train)
-            elif model=='ridge':
-                if self.sklearn==False:
-                    _beta = self.__ridge(_X_train, _z_train)
-                else:
-                    _beta = self.__sklearn_ridge(_X_train, _z_train)
-            elif model=='lasso':
-                _beta = self.__sklearn_lasso(_X_train, _z_train)
+            _beta = self.apply_model(model, _X_train, _z_train)
             _z_pred_train = self.prediction(_X_train, _beta) 
             _z_pred_test = self.prediction(_X_test, _beta)
 
