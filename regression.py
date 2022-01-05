@@ -11,7 +11,7 @@ RAND=13
 np.random.seed(seed=RAND)
 
 
-class Regression:
+class LinearRegression:
     """
     A class to represent a regression instance.
 
@@ -23,13 +23,13 @@ class Regression:
         y:  np.Array['x, y, n', float]
             y-axis of the input data
         degree: float
-            Target complexity degree
+            Target complexity degree.
         model:  string
-            Linear Regression method. Choose between {ols, ridge, lasso}
+            Linear Regression method. Choose between {ols, ridge, lasso}.
         lambda_:    float
-            Regularization parameter lambda. Must be lambda > 0
+            Regularization parameter lambda. Must be lambda > 0.
         test_size: float
-            Percentage of the data to use for testing. Default 0.2
+            Percentage of the data to use for testing. Default 0.2.
         train_test_split: boolean
             True if data is to be split inro test and train subsets. Default True.
 
@@ -57,7 +57,7 @@ class Regression:
         self.degree = degree
         self.sklearn = False
         self.lambda_ = None or lambda_
-        self.train_test_split = train_test_split
+        self.train_test_split = True or train_test_split
 
 
         regression_set = {'ols', 'ridge', 'lasso'}

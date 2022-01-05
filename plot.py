@@ -13,7 +13,7 @@ np.random.seed(seed=RAND)
 def print_stats(z, x, y, degree, model, lambda_=0):
 
     # Get model
-    lr = Regression(z, x, y, degree=degree, model=model, train_test_split=False)
+    lr = LinearRegression(z, x, y, degree=degree, model=model, train_test_split=False)
 
     # Get stats
     mse = lr.MSE(lr.z, lr.z_pred)
@@ -27,12 +27,11 @@ def print_stats(z, x, y, degree, model, lambda_=0):
 def plot_confidence_intervals(title, z, x, y, degree, N=10, model='ols'):
 
     # Get model
-    lr = Regression(z, x, y, degree=degree, model=model, train_test_split=False)
+    lr = LinearRegression(z, x, y, degree=degree, model=model, train_test_split=False)
 
     # Get confidence intervals
     beta_vars = lr.beta_variances(lr.X)
     beta_confs = 1.96*np.sqrt(beta_vars/N**2)
-
 
     # Plot the graph
     plt.figure()
@@ -65,7 +64,7 @@ def plot_boot(title, z, x, y, degree, model, lambda_=0, n_boots=40, type='tradeo
 
     for d in degrees:
         # Get model
-        lr = Regression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
+        lr = LinearRegression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
         mse_test[d-1], mse_train[d-1], bias[d-1], var[d-1] = lr.bootstrap(X_train=lr.X_train, z_train=lr.z_train, X_test=lr.X_test, z_test=lr.z_test, model=model, lambda_=lambda_, n_boots=n_boots)
 
         # Plot the graph
@@ -109,7 +108,7 @@ def plot_MSE_train_test(title, z, x, y, degree, model, lambda_=0):
 
     for d in degrees:
         # Get model
-        lr = Regression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
+        lr = LinearRegression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
         mse_train[d-1] = lr.MSE(lr.z_train, lr.z_pred_train)
         mse_test[d-1] = lr.MSE(lr.z_test, lr.z_pred_test)
 
@@ -141,7 +140,7 @@ def plot_cv(title, z, x, y, degree, model, lambda_=0, k=5):
 
     for d in degrees:
         # Get model
-        lr = Regression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
+        lr = LinearRegression(z, x, y, degree=d, model=model, lambda_=lambda_, train_test_split=True)
         X = lr.design_matrix(x, y, degree=d)
 
         mse_test[d-1], mse_train[d-1] = lr.cv(X, z, model, k=k)
