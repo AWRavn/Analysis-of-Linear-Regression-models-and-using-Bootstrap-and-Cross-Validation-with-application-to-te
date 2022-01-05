@@ -60,17 +60,21 @@ class Regression:
         if self.train_test_split:
             self.X_train, self.X_test, self.z_train, self.z_test = self.split_and_scale_data(self.X, self.z, test_size=0.2)
 
-            self.__apply_model(model, self.X_train, self.z_train)
+            self.apply_model(model, self.X_train, self.z_train)
+            self.z_pred_train = self.prediction(self.X_train, self.beta)            
+            self.z_pred_test = self.prediction(self.X_test, self.beta)
         else:
-            self.__apply_model(model, self.X, self.z)
+            self.apply_model(model, self.X, self.z)
+            self.z_pred = self.prediction(self.X, self.beta)
 
-    def __apply_model(self, model, X, z):
+
+    def apply_model(self, model, X, z):
 
         if model=='ols':
             if self.sklearn==False:
                     self.beta = self.__ols(X, z)
             else:
-                self.beta = self.__sklearn_ols(X)
+                self.beta = self.__sklearn_ols(X, z)
         elif model=='ridge':
             if self.sklearn==False:
                 self.beta = self.__ridge(X, z)
@@ -78,8 +82,6 @@ class Regression:
                 self.beta = self.__sklearn_ridge(X, z)
         elif model=='lasso':
             self.beta = self.__sklearn_lasso(X, z)
-
-        self.z_pred = self.prediction(self.X, self.beta)
 
 
     def __ols(self, X, z):
@@ -166,6 +168,7 @@ class Regression:
 
 
     def split_and_scale_data(self, X, z, test_size=0.2):
+        """Splits data and scales it by subtracting the mean"""
 
         # Train test split
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=test_size, shuffle=True, random_state=RAND)
