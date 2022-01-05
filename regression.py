@@ -32,6 +32,20 @@ class Regression:
             Percentage of the data to use for testing. Default 0.2
         train_test_split: boolean
             True if data is to be split inro test and train subsets. Default True.
+
+    Methods:
+        design_matrix()
+            Implements the Nd polynomial design matrix of a given degree based on a dataset. Includes intercept.
+        MSE()
+            Returns the mean squared error (MSE) of the prediction.
+        R2()
+            Returns the coefficient of determination (R2) of the prediction.
+        beta_variances()
+            Returns variances of the beta coefficients of the model.
+        bootstrap()
+            Performs teh bootstrap resampling using the model.
+        cv()
+            Performs the k-fold cross-validation resampling using the model.
     """
 
     def __init__(self, z, x, y, degree, model, lambda_=None, test_size=0.2, train_test_split=True):
@@ -58,17 +72,17 @@ class Regression:
         self.X = self.design_matrix(self.x, self.y, self.degree)
 
         if self.train_test_split:
-            self.X_train, self.X_test, self.z_train, self.z_test = self.split_and_scale_data(self.X, self.z, test_size=0.2)
+            self.X_train, self.X_test, self.z_train, self.z_test = self.__split_and_scale_data(self.X, self.z, test_size=0.2)
 
-            self.beta = self.apply_model(model, self.X_train, self.z_train)
-            self.z_pred_train = self.prediction(self.X_train, self.beta)            
-            self.z_pred_test = self.prediction(self.X_test, self.beta)
+            self.beta = self.__apply_model(model, self.X_train, self.z_train)
+            self.z_pred_train = self.__prediction(self.X_train, self.beta)            
+            self.z_pred_test = self.__prediction(self.X_test, self.beta)
         else:
-            self.beta = self.apply_model(model, self.X, self.z)
-            self.z_pred = self.prediction(self.X, self.beta)
+            self.beta = self.__apply_model(model, self.X, self.z)
+            self.z_pred = self.__prediction(self.X, self.beta)
 
 
-    def apply_model(self, model, X, z):
+    def __apply_model(self, model, X, z):
 
         if model=='ols':
             if self.sklearn==False:
@@ -125,7 +139,7 @@ class Regression:
         return beta
 
 
-    def prediction(self, X, beta):
+    def __prediction(self, X, beta):
         """
         Returns the predicted regression values against design matrix X.
 
@@ -138,6 +152,22 @@ class Regression:
         """
 
         return X @ beta
+
+
+    def __split_and_scale_data(self, X, z, test_size=0.2):
+        """Splits data and scales it by subtracting the mean"""
+
+        # Train test split
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=test_size, shuffle=True, random_state=RAND)
+
+        for i in range(len(X_train.T)):
+            X_train[:,i] = X_train[:,i] - np.mean(X_train[:,i])
+            X_test[:,i]  = X_test[:,i] - np.mean(X_test[:,i])
+
+        z_train = z_train - np.mean(z_train)
+        z_test = z_test - np.mean(z_test)
+
+        return X_train, X_test, z_train, z_test
 
 
     def design_matrix(self, x, y, degree):
@@ -169,23 +199,8 @@ class Regression:
         return X
 
 
-    def split_and_scale_data(self, X, z, test_size=0.2):
-        """Splits data and scales it by subtracting the mean"""
-
-        # Train test split
-        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=test_size, shuffle=True, random_state=RAND)
-
-        for i in range(len(X_train.T)):
-            X_train[:,i] = X_train[:,i] - np.mean(X_train[:,i])
-            X_test[:,i]  = X_test[:,i] - np.mean(X_test[:,i])
-
-        z_train = z_train - np.mean(z_train)
-        z_test = z_test - np.mean(z_test)
-
-        return X_train, X_test, z_train, z_test
-
-
-    def MSE(self, z_actual, z_pred, sklearn=False): 
+    def MSE(self, z_actual, z_pred, sklearn=False):
+        """Returns the mean squared error (MSE) of the prediction."""
         if sklearn==False:
             mse = (np.sum((z_actual - z_pred) ** 2)) / (len(z_pred))
             #mse = np.mean((z_actual - z_pred) ** 2)
@@ -195,6 +210,7 @@ class Regression:
    
 
     def R2(self, z_actual, z_pred, sklearn=False):
+        """Returns the coefficient of determination (R2) of the prediction."""
         if sklearn==False:
             r2 = 1 - ((np.sum((z_actual - z_pred) ** 2)) / (np.sum((z_actual - np.mean(z_actual)) ** 2)))
         else:
@@ -203,11 +219,13 @@ class Regression:
 
 
     def beta_variances(self, X, sigma=1):
+        """Returns variances of the beta coefficients of the model."""
         beta_vars = np.diagonal(sigma * (np.linalg.pinv(X.T @ X)))
         return beta_vars
 
 
     def bootstrap(self, X_train, z_train, X_test, z_test, model, lambda_=0, n_boots=50, sklearn=False):
+        """Performs teh bootstrap resampling using the model."""
 
         # Initialize arrays
         z_pred_test = np.empty((len(z_test), n_boots))
@@ -219,9 +237,9 @@ class Regression:
         for n in range(n_boots):
             _X_train, _z_train = resample(X_train, z_train, replace=True)
 
-            _beta = self.apply_model(model, _X_train, _z_train)
-            _z_pred_train = self.prediction(_X_train, _beta) 
-            _z_pred_test = self.prediction(X_test, _beta)
+            _beta = self.__apply_model(model, _X_train, _z_train)
+            _z_pred_train = self.__prediction(_X_train, _beta) 
+            _z_pred_test = self.__prediction(X_test, _beta)
 
             z_pred_test[:, n] = _z_pred_test
             z_pred_train[:, n] = _z_pred_train
@@ -238,6 +256,7 @@ class Regression:
 
 
     def cv(self, X, z, model, k=5, sklearn=False):
+        """Performs the k-fold cross-validation resampling using the model."""
 
         X, z = shuffle(X, z, random_state=RAND)
 
@@ -254,9 +273,9 @@ class Regression:
             _X_train = np.concatenate(X_folds[:i] + X_folds[i+1:])
             _z_train = np.concatenate(z_folds[:i] + z_folds[i+1:])
 
-            _beta = self.apply_model(model, _X_train, _z_train)
-            _z_pred_train = self.prediction(_X_train, _beta) 
-            _z_pred_test = self.prediction(_X_test, _beta)
+            _beta = self.__apply_model(model, _X_train, _z_train)
+            _z_pred_train = self.__prediction(_X_train, _beta) 
+            _z_pred_test = self.__prediction(_X_test, _beta)
 
             MSE_test_total.append(self.MSE(_z_test, _z_pred_test))
             MSE_train_total.append(self.MSE(_z_train, _z_pred_train))
